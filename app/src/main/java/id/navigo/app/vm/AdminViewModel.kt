@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import id.navigo.app.data.Article
+import id.navigo.app.data.CloudSync
 import id.navigo.app.data.DocTemplate
 import id.navigo.app.data.Law
 import id.navigo.app.data.ServiceLocator
@@ -39,16 +40,29 @@ class AdminViewModel(private val app: Application) : AndroidViewModel(app) {
 
     // ---- UU & pasal (lokal; sinkron Firestore belum diimplementasikan) ----
     fun addLaw(title: String, number: String, topic: String, desc: String, firstArticleNo: String, firstArticle: String) = viewModelScope.launch {
-        val id = db.lawDao().insertLaw(Law(title = title, number = number, category = "UU", topic = topic, description = desc))
+        val law = Law(title = title, number = number, category = "UU", topic = topic, description = desc)
+        val id = db.lawDao().insertLaw(law)
         if (firstArticle.isNotBlank()) db.lawDao().insertArticles(listOf(Article(lawId = id, number = firstArticleNo.ifBlank { "1" }, text = firstArticle)))
+        runCatching { CloudSync.pushLaw(app, law.copy(id = id)) }
     }
-    fun renameLaw(l: Law, title: String) = viewModelScope.launch { db.lawDao().updateLaw(l.copy(title = title)) }
-    fun deleteLaw(l: Law) = viewModelScope.launch { db.lawDao().deleteArticlesOf(l.id); db.lawDao().deleteLaw(l) }
-
-    // ---- Template ----
-    fun toggleTemplate(t: DocTemplate) = viewModelScope.launch { db.templateDao().update(t.copy(active = !t.active)) }
+    fun renameLaw(l: Law, title: String) = viewModelScope.launch {
+        val u = l.copy(title = title); db.lawDao().updateLaw(u); runCatching { CloudSync.pushLaw(app, u) }
+    }
+    fun deleteLaw(l: Law) = viewModelScope.launch {
+        runCatching { CloudSync.deleteLaw(app, l) }
+        db.lawDao().deleteArticlesOf(l.id); db.lawDao().deleteLaw(l)
+    }
+    fun toggleTemplate(t: DocTemplate) = viewModelScope.launch {
+        val u = t.copy(active = !t.active); db.templateDao().update(u); runCatching { CloudSync.pushTemplate(app, u) }
+    }
     fun saveTemplate(t: DocTemplate, name: String, body: String, active: Boolean) = viewModelScope.launch {
-        db.templateDao().update(t.copy(name = name, body = body, active = active, version = t.version + 1))
+        val u = t.copy(name = name, body = body, active = active, version = t.version + 1)
+        db.templateDao().update(u); runCatching { CloudSync.pushTemplate(app, u) }
+    }
+    /** Sekali jalan: unggah seluruh data seed lokal ke cloud. */
+    fun pushAll() = viewModelScope.launch {
+        db.lawDao().laws().forEach { runCatching { CloudSync.pushLaw(app, it) } }
+        db.templateDao().all().first().forEach { runCatching { CloudSync.pushTemplate(app, it) } }
     }
 
     // ---- Akun pengguna (Firestore koleksi "users"; contoh lokal bila Firebase belum aktif) ----

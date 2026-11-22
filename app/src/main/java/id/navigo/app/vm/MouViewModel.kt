@@ -63,7 +63,7 @@ class MouViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Alur: validasi -> pre-screening lokal -> Gemini (maks 3 percobaan) -> skor berbobot -> simpan. */
+    /** Alur: validasi -> pre-screening lokal -> Gemini -> skor berbobot -> simpan. */
     fun analyze(onDone: () -> Unit) = viewModelScope.launch {
         val s = state.value
         if (s.text.trim().length < 100) { state.update { it.copy(error = "Pilih dokumen atau tempel teks (min. 100 karakter).") }; return@launch }
@@ -71,18 +71,21 @@ class MouViewModel(private val app: Application) : AndroidViewModel(app) {
         if (!Prefs.consumeQuota(app)) { state.update { it.copy(error = "Kuota AI harian habis. Coba lagi besok.") }; return@launch }
         state.update { it.copy(loading = true, error = null, status = "Status: menganalisis…") }
 
-        val text = s.text.take(Guardrail.MAX_DOC)
+        val text = s.text.take(AiClient.MAX_DOCUMENT_CHARS)
+        val partial = s.text.length > text.length
         val anon = Anonymizer()
         val prompt = MouEngine.buildPrompt(anon.mask(text), s.focus)
-        var json: org.json.JSONObject? = null
-        repeat(3) { if (json == null) json = AiClient.json(prompt) }
+        val json = AiClient.json(prompt)
 
         val limited = json == null || json!!.optString("summary").isBlank()
         val aiRisks = if (limited) emptyList() else MouEngine.parseRisks(json!!).map {
             it.copy(title = anon.restore(it.title), suggestion = anon.restore(it.suggestion))
         }
-        val summary = if (limited) "Mode terbatas: layanan AI tidak tersedia, hanya checklist klausul lokal yang ditampilkan."
-        else anon.restore(json!!.optString("summary"))
+        val summary = when {
+            limited -> "Mode terbatas: layanan AI tidak tersedia, hanya checklist klausul lokal yang ditampilkan.\n\n${AiClient.troubleshootingHint()}"
+            partial -> "Catatan: dokumen melebihi ${AiClient.MAX_DOCUMENT_CHARS} karakter; AI hanya menganalisis bagian awal.\n\n${anon.restore(json!!.optString("summary"))}"
+            else -> anon.restore(json!!.optString("summary"))
+        }
         val risks = (aiRisks + MouEngine.missingAsRisks(text)).sortedBy { listOf("tinggi", "sedang", "rendah").indexOf(it.level.lowercase()) }
         val score = MouEngine.score(text, aiRisks)
         val level = MouEngine.classify(score)

@@ -11,6 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider
+import id.navigo.app.R
 
 data class AuthState(
     val loggedIn: Boolean = false, val email: String = "", val name: String = "",
@@ -45,6 +53,37 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             return false to false
         }
         return email.equals("admin@navigo.id", true) to false
+    }
+
+    fun signInWithGoogle(activityCtx: Context) {
+        if (!fb) { state.update { it.copy(error = "Login Google butuh Firebase aktif (google-services.json).") }; return }
+        viewModelScope.launch {
+            state.update { it.copy(loading = true, error = null) }
+            try {
+                val option = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(activityCtx.getString(R.string.default_web_client_id))
+                    .build()
+                val req = GetCredentialRequest.Builder().addCredentialOption(option).build()
+                val cred = CredentialManager.create(activityCtx).getCredential(activityCtx, req).credential
+                require(cred is CustomCredential && cred.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) { "Kredensial Google tidak dikenali" }
+                val token = GoogleIdTokenCredential.createFrom(cred.data).idToken
+                val result = FirebaseAuth.getInstance().signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                val user = result.user ?: error("Login gagal")
+                val email = user.email.orEmpty()
+                // buat dokumen users/{uid} jika akun baru
+                val ref = FirebaseFirestore.getInstance().collection("users").document(user.uid)
+                if (runCatching { ref.get().await() }.getOrNull()?.exists() != true) {
+                    runCatching { ref.set(mapOf("email" to email, "name" to (user.displayName ?: nameOf(email)),
+                        "role" to "user", "status" to "aktif", "createdAt" to System.currentTimeMillis())).await() }
+                }
+                val (admin, blocked) = profile(user.uid, email)
+                if (blocked) { FirebaseAuth.getInstance().signOut(); throw IllegalStateException("Akun Anda diblokir oleh admin.") }
+                state.update { it.copy(loggedIn = true, email = email, name = user.displayName ?: nameOf(email), isAdmin = admin, loading = false) }
+            } catch (e: Exception) {
+                state.update { it.copy(loading = false, error = e.message ?: "Login Google dibatalkan") }
+            }
+        }
     }
 
     fun submit(register: Boolean, email: String, pass: String, confirm: String) {

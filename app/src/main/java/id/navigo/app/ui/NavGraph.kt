@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -27,6 +29,12 @@ fun NavGraph() {
     val contracts: ContractViewModel = viewModel()
     val hist: HistoryViewModel = viewModel()
     val admin: AdminViewModel = viewModel()
+
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val authState by auth.state.collectAsStateWithLifecycle()
+    LaunchedEffect(authState.loggedIn) {
+        if (authState.loggedIn) runCatching { id.navigo.app.data.CloudSync.pull(ctx) }
+    }
 
     val route = nav.currentBackStackEntryAsState().value?.destination?.route
     fun go(r: String) = nav.navigate(r) { launchSingleTop = true }

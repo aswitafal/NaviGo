@@ -43,6 +43,7 @@ fun SplashScreen(auth: AuthViewModel, onNext: (loggedIn: Boolean, admin: Boolean
 @Composable
 fun AuthScreen(vm: AuthViewModel, onLoggedIn: (admin: Boolean) -> Unit) {
     val st by vm.state.collectAsStateWithLifecycle()
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var register by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
@@ -70,9 +71,12 @@ fun AuthScreen(vm: AuthViewModel, onLoggedIn: (admin: Boolean) -> Unit) {
         st.info?.let { Text(it, color = GreenFg, fontSize = 13.sp) }
         PrimaryButton(if (register) "Daftar" else "Masuk", { vm.submit(register, email, pass, confirm) }, loading = st.loading)
         Text("atau", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp)
-        OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(10.dp)) {
-            Text("Masuk dengan Google (belum tersedia)")
+
+        OutlinedButton(onClick = { vm.signInWithGoogle(ctx) },
+            modifier = Modifier.fillMaxWidth().height(46.dp), shape = RoundedCornerShape(10.dp)) {
+            Text("Masuk dengan Google")
         }
+
         Spacer(Modifier.height(8.dp))
         Hint("Dengan masuk, Anda menyetujui syarat penggunaan dan kebijakan privasi NaviGo.")
     }

@@ -104,6 +104,7 @@ fun AdminDashboardScreen(vm: AdminViewModel, go: (String) -> Unit, onLogout: () 
                 }
             }
         }
+        OutlineBtn("Unggah data lokal ke cloud (sekali)", { vm.pushAll() })
         Hint("Admin juga dapat memakai fitur pengguna: keluar lalu masuk dengan akun pengguna biasa.")
         OutlineBtn("Keluar", onLogout)
     }
@@ -126,7 +127,6 @@ fun AdminLawsScreen(vm: AdminViewModel, onBack: () -> Unit) {
                 Row { TextButton(onClick = { edit = l }) { Text("Ubah") }; TextButton(onClick = { vm.deleteLaw(l) }) { Text("Hapus", color = RedFg) } }
             }
         }
-        Hint("Perubahan tersimpan di database lokal perangkat (sinkron Firestore belum diimplementasikan).")
         Spacer(Modifier.height(72.dp))
     }
     if (add) {

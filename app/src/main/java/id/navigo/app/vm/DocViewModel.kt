@@ -51,8 +51,10 @@ class DocViewModel(private val app: Application) : AndroidViewModel(app) {
                 state.update { it.copy(busy = true) }
                 val anon = Anonymizer()
                 val masked = s.values.mapValues { anon.mask(it.value) }
-                val r = AiClient.json(DocEngine.suggestPrompt(t.name, masked), 15_000)?.optString("klausul")
-                if (r.isNullOrBlank()) msg = "Saran AI gagal, memakai klausul standar." else extra = anon.restore(r)
+                val r = AiClient.json(DocEngine.suggestPrompt(t.name, masked))?.optString("klausul")
+                if (r.isNullOrBlank()) {
+                    msg = "Saran AI gagal, memakai klausul standar. ${AiClient.troubleshootingHint()}"
+                } else extra = anon.restore(r)
             }
         }
         state.update { it.copy(busy = false, errors = emptyMap(), message = msg, values = it.values + ("klausul_tambahan" to extra)) }

@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -132,12 +133,47 @@ fun MouResultScreen(vm: MouViewModel, onBack: () -> Unit, onSaveDeadline: () -> 
 @Composable
 fun LawSearchScreen(vm: LawViewModel, onBack: () -> Unit, onOpen: () -> Unit) {
     val st by vm.state.collectAsStateWithLifecycle()
+    var pasalToken by remember { mutableStateOf("") }
+    val context = androidx.compose.ui.platform.LocalContext.current
     Screen("Cari Undang-Undang", onBack) {
         OutlinedTextField(st.query, vm::setQuery, Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp),
             placeholder = { Text("mis. hak cipta lagu") }, leadingIcon = { Icon(NIcons.Search, null) })
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("Semua", "UU", "PP", "Permen").forEach {
                 FilterChip(selected = st.category == it, onClick = { vm.setCategory(it) }, label = { Text(it) })
+            }
+        }
+        OutlinedButton(
+            onClick = vm::searchPasalId,
+            enabled = st.query.trim().length >= 3 && !st.pasalLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (st.pasalLoading) "Mencari di Pasal.id…" else "Cari rujukan di Pasal.id")
+        }
+        Hint("Pasal.id menyediakan metadata dan tautan ke teks peraturan, bukan teks pasal melalui API.")
+        st.pasalMessage?.let { Text(it, color = RedFg, fontSize = 13.sp) }
+        st.pasalResults.forEach { result ->
+            NaviCard(Modifier.fillMaxWidth()) {
+                Text(result.title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Hint(listOf(result.citation, result.status?.let { "Status: $it" })
+                    .filterNotNull().filter { it.isNotBlank() }.joinToString(" · "))
+                if (result.statusUncertain) Hint("Status berlaku belum dapat dipastikan.")
+                if (result.url.isNotBlank()) {
+                    TextButton(onClick = {
+                        context.startActivity(android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse(result.url)
+                        ))
+                    }) { Text("Buka peraturan di Pasal.id") }
+                }
+                result.passages.forEach { passage ->
+                    TextButton(onClick = {
+                        context.startActivity(android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse(passage.url)
+                        ))
+                    }) { Text("Buka Pasal ${passage.number}") }
+                }
             }
         }
         when {
@@ -165,6 +201,31 @@ fun LawSearchScreen(vm: LawViewModel, onBack: () -> Unit, onOpen: () -> Unit) {
                         }
                     }
                 }
+                if (st.needsPasalToken) AlertDialog(
+                    onDismissRequest = { vm.dismissPasalTokenDialog(); pasalToken = "" },
+                    title = { Text("Hubungkan Pasal.id") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Masukkan token API Pasal.id. Token disimpan terenkripsi di perangkat ini dan tidak dimasukkan ke source code.")
+                            OutlinedTextField(
+                                value = pasalToken,
+                                onValueChange = { pasalToken = it },
+                                singleLine = true,
+                                visualTransformation = PasswordVisualTransformation(),
+                                label = { Text("Token API") }
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            enabled = pasalToken.isNotBlank(),
+                            onClick = { vm.savePasalTokenAndSearch(pasalToken); pasalToken = "" }
+                        ) { Text("Simpan dan cari") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { vm.dismissPasalTokenDialog(); pasalToken = "" }) { Text("Batal") }
+                    }
+                )
             }
         }
     }

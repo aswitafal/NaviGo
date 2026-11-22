@@ -9,6 +9,7 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
+@Suppress("DEPRECATION")
 android {
     namespace = "id.navigo.app"
     compileSdk = 35
@@ -19,13 +20,18 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }
 
 dependencies {
@@ -39,15 +45,15 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     // Room (SQLite)
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.0")
+    implementation("androidx.room:room-ktx:2.7.0")
+    ksp("androidx.room:room-compiler:2.7.0")
 
     // WorkManager (reminder kontrak)
     implementation("androidx.work:work-runtime-ktx:2.10.0")
 
     // Firebase: Auth, Firestore, AI Logic (Gemini)
-    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+    implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-ai")
@@ -56,4 +62,18 @@ dependencies {
     // Ekstraksi teks dokumen di perangkat
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // enkripsi sql
+    implementation("net.zetetic:sqlcipher-android:4.5.6@aar")
+    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
+
+    // firebase
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    debugImplementation("com.google.firebase:firebase-appcheck-debug")
+
+    // kredensial google
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
 }

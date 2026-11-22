@@ -7,13 +7,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Entity(tableName = "laws")
 data class Law(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String, val number: String, val category: String,
     val topic: String, val description: String,
-    val active: Boolean = true, val aiSummary: String? = null
+    val active: Boolean = true,
+    val aiSummary: String? = null,
+    val remoteId: String = ""
 )
 
 @Entity(tableName = "articles")
@@ -64,7 +67,8 @@ data class Contract(
 data class DocTemplate(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String, val description: String, val body: String,
-    val fields: String, val version: Int = 1, val active: Boolean = true, val usedCount: Int = 0
+    val fields: String, val version: Int = 1, val active: Boolean = true,
+    val usedCount: Int = 0, val remoteId: String = ""
 )
 
 data class FormField(val key: String, val label: String, val type: String, val required: Boolean)
@@ -87,6 +91,7 @@ fun DocTemplate.formFields(): List<FormField> =
     @Update suspend fun updateLaw(l: Law)
     @Delete suspend fun deleteLaw(l: Law)
     @Query("DELETE FROM articles WHERE lawId=:id") suspend fun deleteArticlesOf(id: Long)
+    @Query("SELECT * FROM laws WHERE remoteId=:r LIMIT 1") suspend fun byRemote(r: String): Law?
 }
 
 @Dao interface MouDao {
@@ -130,12 +135,14 @@ fun DocTemplate.formFields(): List<FormField> =
     @Insert suspend fun insertAll(t: List<DocTemplate>)
     @Update suspend fun update(t: DocTemplate)
     @Delete suspend fun delete(t: DocTemplate)
+    @Query("SELECT * FROM templates WHERE remoteId=:r LIMIT 1") suspend fun byRemote(r: String): DocTemplate?
+    @Query("SELECT * FROM templates") suspend fun list(): List<DocTemplate>
 }
 
 @Database(
     entities = [Law::class, Article::class, MouAnalysis::class, ChatSession::class,
         ChatMessage::class, GeneratedDoc::class, Contract::class, DocTemplate::class],
-    version = 1, exportSchema = false
+    version = 2, exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun lawDao(): LawDao
@@ -150,7 +157,10 @@ object ServiceLocator {
     lateinit var db: AppDatabase
     lateinit var repo: Repo
     fun init(app: Application) {
+        System.loadLibrary("sqlcipher")
+        val factory = SupportOpenHelperFactory(DbKey.passphrase(app))
         db = Room.databaseBuilder(app, AppDatabase::class.java, "navigo.db")
+            .openHelperFactory(factory)
             .fallbackToDestructiveMigration().build()
         repo = Repo(db)
         CoroutineScope(Dispatchers.IO).launch { repo.seedIfEmpty() }

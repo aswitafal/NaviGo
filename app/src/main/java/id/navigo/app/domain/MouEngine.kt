@@ -53,7 +53,7 @@ Fokus analisis: ${if (focus.isEmpty()) "umum" else focus.joinToString(", ")}.
 Rujukan hukum yang boleh disebut: KUH Perdata Pasal 1320 dan 1338, UU 28/2014 Pasal 9 dan 16.
 Balas HANYA JSON dengan bentuk:
 {"summary":"...","risks":[{"title":"...","level":"Tinggi|Sedang|Rendah","suggestion":"...","basis":"..."}]}
-Maksimal 6 risks. Jika tidak ada risiko, risks berisi array kosong.
+Maksimal 3 risks paling penting. Setiap title, suggestion, dan basis harus singkat. Jika tidak ada risiko, risks berisi array kosong.
 <dokumen>
 $text
 </dokumen>""".trimIndent()
