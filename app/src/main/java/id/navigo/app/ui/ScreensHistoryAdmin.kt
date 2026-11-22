@@ -104,7 +104,7 @@ fun AdminDashboardScreen(vm: AdminViewModel, go: (String) -> Unit, onLogout: () 
                 }
             }
         }
-        OutlineBtn("Unggah data lokal ke cloud (sekali)", { vm.pushAll() })
+        OutlineBtn("Unggah data lokal ke cloud", { vm.pushAll() })
         Hint("Admin juga dapat memakai fitur pengguna: keluar lalu masuk dengan akun pengguna biasa.")
         OutlineBtn("Keluar", onLogout)
     }
