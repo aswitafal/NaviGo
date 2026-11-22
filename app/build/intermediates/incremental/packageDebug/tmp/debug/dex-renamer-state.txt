@@ -1,4 +1,4 @@
-#Sun Nov 22 19:38:58 WIB 2026
+#Sun Nov 22 19:56:26 WIB 2026
 base.0=C\:\\Users\\Aswita\\AndroidStudioProjects\\NaviGo\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\Users\\Aswita\\AndroidStudioProjects\\NaviGo\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.10=C\:\\Users\\Aswita\\AndroidStudioProjects\\NaviGo\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
