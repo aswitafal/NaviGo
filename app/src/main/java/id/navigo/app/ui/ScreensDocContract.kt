@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
@@ -29,10 +28,10 @@ import id.navigo.app.data.formFields
 import id.navigo.app.domain.DocEngine
 import id.navigo.app.domain.PdfWriter
 import id.navigo.app.util.Dates
-import id.navigo.app.vm.ContractViewModel
-import id.navigo.app.vm.DocViewModel
-import id.navigo.app.vm.HistoryViewModel
-import id.navigo.app.vm.Prefill
+import id.navigo.app.viewModel.ContractViewModel
+import id.navigo.app.viewModel.DocViewModel
+import id.navigo.app.viewModel.HistoryViewModel
+import id.navigo.app.viewModel.Prefill
 import java.io.File
 import java.time.LocalDate
 
@@ -52,7 +51,7 @@ fun openFile(ctx: Context, path: String) {
 fun TemplatePickScreen(vm: DocViewModel, onBack: () -> Unit, onPick: () -> Unit) {
     val list by vm.templates.collectAsStateWithLifecycle()
     Screen("Buat Dokumen", onBack) {
-        Hint("Pilih jenis dokumen. Draf disusun dari template risiko rendah–menengah dan perlu ditinjau sebelum ditandatangani.")
+        Hint("Pilih jenis dokumen dan tinjau ulang sebelum ditanda tangani!")
         list.forEach { t ->
             NaviCard(Modifier.fillMaxWidth(), onClick = { vm.select(t); onPick() }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -138,7 +137,7 @@ fun DocReadyScreen(vm: DocViewModel, contracts: ContractViewModel, onBack: () ->
             onDeadline()
         })
         TextButton(onClick = onHome, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Kembali ke Beranda") }
-        Hint("Cetak dan tanda tangani di atas meterai cukup agar dokumen kuat sebagai alat bukti.")
+        Hint("Cetak dan tanda tangani di atas meterai, agar dokumen kuat sebagai alat bukti.")
     }
 }
 

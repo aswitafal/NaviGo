@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.navigo.app.data.Contract
 import id.navigo.app.util.Dates
-import id.navigo.app.vm.AuthViewModel
-import id.navigo.app.vm.ContractViewModel
+import id.navigo.app.viewModel.AuthViewModel
+import id.navigo.app.viewModel.ContractViewModel
 import kotlinx.coroutines.delay
 
 @Composable

@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import id.navigo.app.vm.ChatViewModel
+import id.navigo.app.viewModel.ChatViewModel
 
 @Composable
 fun ChatScreen(vm: ChatViewModel, onBack: () -> Unit) {

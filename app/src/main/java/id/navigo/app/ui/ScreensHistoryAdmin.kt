@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.navigo.app.util.Dates
-import id.navigo.app.vm.*
+import id.navigo.app.viewModel.*
 
 @Composable
 fun HistoryScreen(

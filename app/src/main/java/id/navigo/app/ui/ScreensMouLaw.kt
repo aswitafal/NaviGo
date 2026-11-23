@@ -3,7 +3,6 @@ package id.navigo.app.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -12,13 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import id.navigo.app.domain.MouEngine
-import id.navigo.app.vm.LawViewModel
-import id.navigo.app.vm.MouViewModel
+import id.navigo.app.viewModel.LawViewModel
+import id.navigo.app.viewModel.MouViewModel
 
 @Composable
 fun MouUploadScreen(vm: MouViewModel, onBack: () -> Unit, onResult: () -> Unit) {
@@ -150,7 +147,6 @@ fun LawSearchScreen(vm: LawViewModel, onBack: () -> Unit, onOpen: () -> Unit) {
         ) {
             Text(if (st.pasalLoading) "Mencari di Pasal.id…" else "Cari rujukan di Pasal.id")
         }
-        Hint("Pasal.id menyediakan metadata dan tautan ke teks peraturan, bukan teks pasal melalui API.")
         st.pasalMessage?.let { Text(it, color = RedFg, fontSize = 13.sp) }
         st.pasalResults.forEach { result ->
             NaviCard(Modifier.fillMaxWidth()) {

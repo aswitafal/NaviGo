@@ -15,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import id.navigo.app.vm.*
+import id.navigo.app.viewModel.*
 
 @Composable
 fun NavGraph() {
