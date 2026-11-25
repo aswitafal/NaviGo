@@ -194,7 +194,8 @@ fun LawDetailScreen(vm: LawViewModel, onBack: () -> Unit, onAskChat: (String) ->
                 else Hint("Belum ada rangkuman. Buat rangkuman AI (butuh internet).")
             }
             st.message?.let { Text(it, color = RedFg, fontSize = 13.sp) }
-            PrimaryButton(if (law.aiSummary == null) "Buat rangkuman AI" else "Buat ulang rangkuman", { gate { vm.summarize() } }, loading = st.summaryLoading)
+            Hint("Sumber: ${law.number}")
+            PrimaryButton(if (st.message?.startsWith("Rangkuman gagal") == true) "Coba Lagi" else if (law.aiSummary == null) "Buat rangkuman AI" else "Buat ulang rangkuman", { gate { vm.summarize() } }, loading = st.summaryLoading)
         } else {
             st.articles.forEach {
                 NaviCard(Modifier.fillMaxWidth()) {
