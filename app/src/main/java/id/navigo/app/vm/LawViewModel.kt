@@ -10,10 +10,13 @@ import id.navigo.app.data.LawHit
 import id.navigo.app.data.ServiceLocator
 import id.navigo.app.util.Net
 import id.navigo.app.util.Prefs
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class LawState(
     val query: String = "", val category: String = "Semua",
@@ -34,9 +37,10 @@ class LawViewModel(private val app: Application) : AndroidViewModel(app) {
     private fun run() {
         job?.cancel()
         job = viewModelScope.launch {
+            delay(300)
             val s = state.value
             if (s.query.trim().length < 3) { state.update { it.copy(hits = emptyList(), searched = false) }; return@launch }
-            val hits = repo.searchLaws(s.query, s.category)
+            val hits = withContext(Dispatchers.Default) { repo.searchLaws(s.query, s.category) }
             state.update { it.copy(hits = hits, searched = true) }
         }
     }
