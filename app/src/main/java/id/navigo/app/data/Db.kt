@@ -156,13 +156,29 @@ abstract class AppDatabase : RoomDatabase() {
 object ServiceLocator {
     lateinit var db: AppDatabase
     lateinit var repo: Repo
-    fun init(app: Application) {
-        System.loadLibrary("sqlcipher")
+
+    private fun buildDatabase(app: Application): AppDatabase {
         val factory = SupportOpenHelperFactory(DbKey.passphrase(app))
-        db = Room.databaseBuilder(app, AppDatabase::class.java, "navigo.db")
+        return Room.databaseBuilder(app, AppDatabase::class.java, "navigo.db")
             .openHelperFactory(factory)
             .fallbackToDestructiveMigration().build()
+    }
+
+    fun init(app: Application) {
+        System.loadLibrary("sqlcipher")
+        db = buildDatabase(app)
         repo = Repo(db)
-        CoroutineScope(Dispatchers.IO).launch { repo.seedIfEmpty() }
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                repo.seedIfEmpty()
+            } catch (e: Exception) {
+                android.util.Log.e("NaviGoDb", "Database corrupt or key mismatch, recreating...", e)
+                runCatching { app.deleteDatabase("navigo.db") }
+                runCatching { app.getSharedPreferences("navigo_sec", android.content.Context.MODE_PRIVATE).edit().clear().apply() }
+                db = buildDatabase(app)
+                repo = Repo(db)
+                runCatching { repo.seedIfEmpty() }
+            }
+        }
     }
 }

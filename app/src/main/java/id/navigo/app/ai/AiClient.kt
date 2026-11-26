@@ -13,9 +13,9 @@ import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 
 object AiClient {
-    private const val MODEL = "gemini-3.5-flash-lite"
+    private const val MODEL = "gemini-2.0-flash"
     private const val REQUEST_TIMEOUT_MS = 60_000L
-    private const val MAX_OUTPUT_TOKENS = 384
+    private const val MAX_OUTPUT_TOKENS = 1024
     const val MAX_DOCUMENT_CHARS = 6_000
     const val MAX_DATABASE_CONTEXT_CHARS = 3_000
     const val MAX_HISTORY_CHARS = 1_200
@@ -60,7 +60,14 @@ object AiClient {
                 return@withContext null
             }
             val obj = runCatching {
-                JSONObject(raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim())
+                val clean = raw.trim()
+                val start = clean.indexOf('{')
+                val end = clean.lastIndexOf('}')
+                if (start >= 0 && end > start) {
+                    JSONObject(clean.substring(start, end + 1))
+                } else {
+                    JSONObject(clean.removePrefix("```json").removePrefix("```JSON").removePrefix("```").removeSuffix("```").trim())
+                }
             }.getOrNull()
             if (obj == null) {
                 lastError = "$MODEL returned invalid JSON"

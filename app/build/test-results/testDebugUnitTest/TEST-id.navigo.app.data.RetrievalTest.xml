@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="id.navigo.app.data.RetrievalTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-26T07:25:47.789Z" hostname="savradebian" time="0.437">
+  <properties/>
+  <testcase name="testSynonymMatching" classname="id.navigo.app.data.RetrievalTest" time="0.388"/>
+  <testcase name="testTokenization" classname="id.navigo.app.data.RetrievalTest" time="0.011"/>
+  <testcase name="testNoMatchingArticles" classname="id.navigo.app.data.RetrievalTest" time="0.01"/>
+  <testcase name="testMultiArticleScoring" classname="id.navigo.app.data.RetrievalTest" time="0.009"/>
+  <testcase name="testPhrasingVariations" classname="id.navigo.app.data.RetrievalTest" time="0.002"/>
+  <testcase name="testExactKeywordMatching" classname="id.navigo.app.data.RetrievalTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

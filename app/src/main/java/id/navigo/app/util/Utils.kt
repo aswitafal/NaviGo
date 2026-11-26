@@ -39,17 +39,19 @@ class Anonymizer {
     private val map = linkedMapOf<String, String>()
     private var n = 0
     private val rules = listOf(
-        "PIHAK" to Regex("(?i)(?<=nama\\s{0,3}:\\s{0,3})[^\\n,;]{2,60}"),
+        "PIHAK" to Regex("(?i)(?<=\\bnama\\s{0,3}:\\s{0,3})[^\\n,;]{2,60}|(?<=\\batas\\s{1,3}nama\\s{0,3}:\\s{0,3})[^\\n,;]{2,60}"),
         "EMAIL" to Regex("[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+"),
-        "NPWP" to Regex("\\b\\d{2}\\.\\d{3}\\.\\d{3}\\.\\d-\\d{3}\\.\\d{3}\\b"),
-        "NIK" to Regex("\\b\\d{16}\\b"),
-        "TELP" to Regex("(\\+62|\\b0)8\\d{8,11}\\b"),
-        "REKENING" to Regex("\\b\\d{10,15}\\b")
+        "NPWP" to Regex("\\b\\d{2}\\.\\d{3}\\.\\d{3}\\.\\d-\\d{3}\\.\\d{3}\\b|\\b\\d{15}\\b"),
+        "NIK" to Regex("\\b\\d{16}\\b|\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b"),
+        "TELP" to Regex("(\\+62|\\b0)8[0-9]{1,4}[- ]?[0-9]{3,4}[- ]?[0-9]{3,4}\\b|(\\+62|\\b0)8\\d{8,11}\\b"),
+        "REKENING" to Regex("\\b\\d{3,5}[-]\\d{3,5}[-]\\d{3,5}\\b|\\b\\d{10,15}\\b")
     )
 
     fun mask(text: String): String {
         var out = text
-        for ((tag, re) in rules) out = re.replace(out) { m -> map.getOrPut(m.value) { "[${tag}_${++n}]" } }
+        for ((tag, re) in rules) {
+            out = re.replace(out) { m -> map.getOrPut(m.value) { "[${tag}_${++n}]" } }
+        }
         return out
     }
 
@@ -67,15 +69,69 @@ object Guardrail {
         "hukum", "uu", "undang", "pasal", "kontrak", "perjanjian", "mou", "hak cipta", "hki", "merek",
         "royalti", "lisensi", "paten", "izin", "nib", "umkm", "usaha", "pajak", "data pribadi", "wanprestasi",
         "ganti rugi", "denda", "nda", "kerahasiaan", "sengketa", "klien", "legal", "peraturan", "karya",
-        "pidana", "perdata", "meterai", "materai", "bisnis", "pelanggan", "konsumen", "kuasa"
+        "pidana", "perdata", "meterai", "materai", "bisnis", "pelanggan", "konsumen", "kuasa", "sanksi",
+        "kewajiban", "hak", "batal", "pemutusan", "pelanggaran", "akta", "notaris", "badan hukum", "pt", "cv",
+        "firma", "pengadilan", "somasi", "advokat", "pengacara", "arbitrase", "tenaga kerja", "pesangon",
+        "phk", "pembajakan", "pencipta", "pemegang hak", "rahasia dagang", "pdp", "pelindungan data",
+        "klausul", "yurisdiksi", "hukumnya"
+    )
+
+    private val injectionPatterns = listOf(
+        Regex("(?i)(abaikan|ignore|lupakan|forget)\\s+(semua|seluruh|setiap|previous|all)?\\s*(aturan|instruksi|perintah|rule|prompt|instruction)"),
+        Regex("(?i)(sekarang\\s+kamu\\s+adalah|kamu\\s+adalah|you\\s+are\\s+now|act\\s+as|pretend\\s+to\\s+be|peran\\s+kamu|roleplay)"),
+        Regex("(?i)(system\\s*prompt|developer\\s*mode|jailbreak|override\\s*rules|sistem\\s*prompt)"),
+        Regex("(?i)(jangan\\s+patuhi|tidak\\s+perlu\\s+mematuhi|ignore\\s+system)")
+    )
+
+    private val dangerousPatterns = listOf(
+        Regex("(?i)(buat|membuat|merakit|bikin|cara\\s+membuat)\\s+.*(bom|bahan\\s+peledak|senjata|racun|molotov)"),
+        Regex("(?i)\\b(merakit\\s+bom|bahan\\s+peledak|cara\\s+buat\\s+bom|membuat\\s+bom)\\b"),
+        Regex("(?i)(meretas|peretasan|hack\\s+rekening|hack\\s+website|pencurian\\s+data\\s+ilegal)"),
+        Regex("(?i)(bunuh\\s+diri|cara\\s+mati|menyakiti\\s+diri)")
+    )
+
+    private val offTopicDomains = listOf(
+        "resep", "memasak", "bumbu", "nasi goreng", "kuliner", "makanan",
+        "sepak bola", "piala dunia", "klub bola", "skor", "badminton",
+        "penyanyi", "lirik lagu", "film", "selebriti",
+        "cuaca", "tata surya", "fisika", "matematika"
+    )
+
+    private val continuationIndicators = listOf(
+        "bagaimana", "apakah", "berapa", "apa", "mengapa", "kenapa", "jelaskan",
+        "sanksinya", "prosedurnya", "jangka waktu", "konsekuensi", "dampaknya",
+        "syaratnya", "ketentuannya", "contohnya", "lanjutan", "pasalnya"
     )
 
     fun validateQuestion(q: String, hasContext: Boolean): String? {
         if (q.isBlank()) return "Pertanyaan tidak boleh kosong."
         if (q.length > MAX_PROMPT) return "Pertanyaan terlalu panjang (maks $MAX_PROMPT karakter)."
+
         val l = q.lowercase()
-        if (!hasContext && scope.none { l.contains(it) })
+
+        // 1. Check prompt injection (ALWAYS checked regardless of hasContext)
+        if (injectionPatterns.any { it.containsMatchIn(q) }) {
+            return "Maaf, instruksi untuk mengubah peran atau mengabaikan aturan sistem tidak dapat diproses."
+        }
+
+        // 2. Check dangerous requests (ALWAYS checked regardless of hasContext)
+        if (dangerousPatterns.any { it.containsMatchIn(q) }) {
+            return "Maaf, NaviGo tidak dapat memproses pertanyaan yang berkaitan dengan tindakan berbahaya atau ilegal."
+        }
+
+        // 3. Check explicit off-topic domains (ALWAYS checked regardless of hasContext)
+        if (offTopicDomains.any { l.contains(it) }) {
             return "Maaf, NaviGo hanya menjawab pertanyaan seputar hukum bisnis (kontrak, hak cipta, merek, data pribadi, dll.)."
+        }
+
+        // 4. Scope check (checked for ALL messages, first and follow-up)
+        val hasScopeKeyword = scope.any { l.contains(it) }
+        val isContinuation = hasContext && continuationIndicators.any { l.contains(it) }
+
+        if (!hasScopeKeyword && !isContinuation) {
+            return "Maaf, NaviGo hanya menjawab pertanyaan seputar hukum bisnis (kontrak, hak cipta, merek, data pribadi, dll.)."
+        }
+
         return null
     }
 }

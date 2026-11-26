@@ -4,7 +4,7 @@
             "outputFile": "id.navigo.app-mergeDebugResources-77:/values-port/values-port.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Aswita\\.gradle\\caches\\9.6.0\\transforms\\20d9a3bbe363165d1a4b98d348c055b4\\transformed\\appcompat-1.6.1\\res\\values-port\\values-port.xml",
+                    "source": "/home/savraneh/.gradle/caches/9.6.0/transforms/20d9a3bbe363165d1a4b98d348c055b4/transformed/appcompat-1.6.1/res/values-port/values-port.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

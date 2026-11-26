@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NaviGo</string>
-    <string name="default_web_client_id" translatable="false">764936185011-r39dlrbanedibhlne7te8q4c5t039ll9.apps.googleusercontent.com</string>
-    <string name="gcm_defaultSenderId" translatable="false">764936185011</string>
-    <string name="google_api_key" translatable="false">AIzaSyCG0Iogthe3kTo5mKnYgyXFDYtukM5GIoc</string>
-    <string name="google_app_id" translatable="false">1:764936185011:android:95ebca3f14ef63d2e53cc6</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCG0Iogthe3kTo5mKnYgyXFDYtukM5GIoc</string>
-    <string name="google_storage_bucket" translatable="false">navigo-cc7f2.firebasestorage.app</string>
-    <string name="project_id" translatable="false">navigo-cc7f2</string>
+    <string name="default_web_client_id" translatable="false">dummy_web_client_id</string>
+    <string name="gcm_defaultSenderId" translatable="false">648892256471</string>
+    <string name="google_api_key" translatable="false">AIzaSyBeVqYWMDunQHKvZMvIrBhfUrdIFzuNw6o</string>
+    <string name="google_app_id" translatable="false">1:648892256471:android:ccdc0b5e66f5eb1f2f6092</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBeVqYWMDunQHKvZMvIrBhfUrdIFzuNw6o</string>
+    <string name="google_storage_bucket" translatable="false">navigo-9b937.firebasestorage.app</string>
+    <string name="project_id" translatable="false">navigo-9b937</string>
     <style name="Theme.NaviGo" parent="android:Theme.Material.Light.NoActionBar"/>
 </resources>

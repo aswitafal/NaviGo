@@ -57,17 +57,56 @@ class Repo(val db: AppDatabase) {
             }.sortedByDescending { it.score }
     }
 
+    private val synonymMap = mapOf(
+        "wanprestasi" to listOf("wanprestasi", "ingkar janji", "cidera janji", "pelanggaran kontrak"),
+        "ingkar" to listOf("ingkar janji", "wanprestasi", "cidera janji"),
+        "hki" to listOf("hki", "hak cipta", "merek", "paten", "kekayaan intelektual"),
+        "cipta" to listOf("hak cipta", "pencipta", "ciptaan", "hki"),
+        "merek" to listOf("merek", "brand", "hki", "lisensi"),
+        "nda" to listOf("nda", "kerahasiaan", "rahasia dagang"),
+        "mou" to listOf("mou", "nota kesepahaman", "perjanjian"),
+        "pdp" to listOf("pdp", "data pribadi", "privasi", "pelindungan data"),
+        "pajak" to listOf("pajak", "pph", "ppn", "perpajakan"),
+        "sanksi" to listOf("sanksi", "denda", "pidana", "hukuman"),
+        "pembajakan" to listOf("pembajakan", "pelanggaran hak cipta", "penggandaan")
+    )
+
+    private fun expandTokens(tokens: List<String>): List<String> {
+        val result = tokens.toMutableList()
+        for (t in tokens) {
+            synonymMap[t]?.let { result.addAll(it) }
+        }
+        return result.distinct()
+    }
+
     /** Retrieval pasal untuk RAG chatbot. */
     suspend fun searchArticles(q: String, limit: Int = 3): List<ArticleHit> {
         val tk = tokens(q)
         if (tk.isEmpty()) return emptyList()
+        val expanded = expandTokens(tk)
         val laws = db.lawDao().laws().filter { it.active }.associateBy { it.id }
+        val articleNumMatch = Regex("(?i)pasal\\s+(\\d+[a-z]?)").find(q)?.groupValues?.get(1)
+
         return db.lawDao().allArticles().mapNotNull { a ->
             val law = laws[a.lawId] ?: return@mapNotNull null
             val body = (a.text + " " + law.topic + " " + law.title).lowercase()
             var s = 0
-            for (t in tk) if (body.contains(t)) s += 1 + count(body, t)
-            if (s >= 2) ArticleHit(law, a, s) else null
+
+            if (articleNumMatch != null && a.number.equals(articleNumMatch, ignoreCase = true)) {
+                s += 10
+            }
+
+            for (t in expanded) {
+                if (body.contains(t)) {
+                    s += 1 + count(body, t)
+                    if (law.title.lowercase().contains(t) || law.topic.lowercase().contains(t)) {
+                        s += 2
+                    }
+                }
+            }
+
+            val minScore = if (tk.size == 1) 1 else 2
+            if (s >= minScore) ArticleHit(law, a, s) else null
         }.sortedByDescending { it.score }.take(limit)
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="id.navigo.app.util.GuardrailTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-26T07:25:48.392Z" hostname="savradebian" time="0.039">
+  <properties/>
+  <testcase name="testAmbiguousLegalTerm" classname="id.navigo.app.util.GuardrailTest" time="0.01"/>
+  <testcase name="testPromptInjectionFollowUpMessage" classname="id.navigo.app.util.GuardrailTest" time="0.0"/>
+  <testcase name="testValidLegalQuestion" classname="id.navigo.app.util.GuardrailTest" time="0.001"/>
+  <testcase name="testPromptInjectionFirstMessage" classname="id.navigo.app.util.GuardrailTest" time="0.004"/>
+  <testcase name="testDangerousRequest" classname="id.navigo.app.util.GuardrailTest" time="0.01"/>
+  <testcase name="testOffTopicQuestion" classname="id.navigo.app.util.GuardrailTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

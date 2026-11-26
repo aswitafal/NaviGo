@@ -4,7 +4,7 @@
             "outputFile": "id.navigo.app-mergeDebugResources-77:/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Aswita\\.gradle\\caches\\9.6.0\\transforms\\20d9a3bbe363165d1a4b98d348c055b4\\transformed\\appcompat-1.6.1\\res\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+                    "source": "/home/savraneh/.gradle/caches/9.6.0/transforms/20d9a3bbe363165d1a4b98d348c055b4/transformed/appcompat-1.6.1/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

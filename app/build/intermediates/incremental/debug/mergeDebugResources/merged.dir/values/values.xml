@@ -360,17 +360,17 @@
     <string name="copy_toast_msg">Link copied to clipboard</string>
     <string name="default_error_message">"Invalid input"</string>
     <string name="default_popup_window_title" ns2:ignore="ExtraTranslation">"Pop-Up Window"</string>
-    <string name="default_web_client_id" translatable="false">764936185011-r39dlrbanedibhlne7te8q4c5t039ll9.apps.googleusercontent.com</string>
+    <string name="default_web_client_id" translatable="false">dummy_web_client_id</string>
     <string name="dropdown_menu">"Dropdown menu"</string>
     <string name="fallback_menu_item_copy_link">Copy link</string>
     <string name="fallback_menu_item_open_in_browser">Open in browser</string>
     <string name="fallback_menu_item_share_link">Share link</string>
     <string name="firebase_app_check_debug_token" translatable="false"/>
-    <string name="gcm_defaultSenderId" translatable="false">764936185011</string>
-    <string name="google_api_key" translatable="false">AIzaSyCG0Iogthe3kTo5mKnYgyXFDYtukM5GIoc</string>
-    <string name="google_app_id" translatable="false">1:764936185011:android:95ebca3f14ef63d2e53cc6</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCG0Iogthe3kTo5mKnYgyXFDYtukM5GIoc</string>
-    <string name="google_storage_bucket" translatable="false">navigo-cc7f2.firebasestorage.app</string>
+    <string name="gcm_defaultSenderId" translatable="false">648892256471</string>
+    <string name="google_api_key" translatable="false">AIzaSyBeVqYWMDunQHKvZMvIrBhfUrdIFzuNw6o</string>
+    <string name="google_app_id" translatable="false">1:648892256471:android:ccdc0b5e66f5eb1f2f6092</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBeVqYWMDunQHKvZMvIrBhfUrdIFzuNw6o</string>
+    <string name="google_storage_bucket" translatable="false">navigo-9b937.firebasestorage.app</string>
     <string name="in_progress">In progress</string>
     <string name="indeterminate">Partially checked</string>
     <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
@@ -436,7 +436,7 @@
     <string name="m3c_tooltip_pane_description">Tooltip</string>
     <string name="navigation_menu">"Navigation menu"</string>
     <string name="not_selected">Not selected</string>
-    <string name="project_id" translatable="false">navigo-cc7f2</string>
+    <string name="project_id" translatable="false">navigo-9b937</string>
     <string name="range_end">"Range end"</string>
     <string name="range_start">"Range start"</string>
     <string name="search_menu_title">Search</string>

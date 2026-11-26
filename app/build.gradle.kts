@@ -25,7 +25,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+    packaging {
+        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 kotlin {
@@ -64,7 +69,7 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
 
     // enkripsi sql
-    implementation("net.zetetic:sqlcipher-android:4.5.6@aar")
+    implementation("net.zetetic:sqlcipher-android:4.6.0@aar")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // firebase
@@ -76,4 +81,8 @@ dependencies {
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("org.json:json:20240303")
 }
