@@ -1,5 +1,7 @@
 package id.navigo.app.ui
 
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -7,26 +9,37 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import id.navigo.app.domain.MouEngine
 import id.navigo.app.viewModel.LawViewModel
 import id.navigo.app.viewModel.MouViewModel
+import java.io.File
 
 @Composable
 fun MouUploadScreen(vm: MouViewModel, onBack: () -> Unit, onResult: () -> Unit) {
     val st by vm.state.collectAsStateWithLifecycle()
+    val ctx = LocalContext.current
     val gate = rememberConsentGate()
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var showSource by remember { mutableStateOf(false) }
     var showPaste by remember { mutableStateOf(false) }
     var paste by remember { mutableStateOf("") }
     val pdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let { u -> vm.loadUri(u, true) } }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { it?.let { u -> vm.loadUri(u, false) } }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { it?.let { b -> vm.loadBitmap(b) } }
+    // Foto resolusi penuh (bukan thumbnail) agar hasil OCR lebih akurat
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val u = photoUri
+        if (ok && u != null) vm.loadUri(Uri.parse(u), false, "Foto kamera")
+    }
 
     Screen("Analisis MOU", onBack) {
         NaviCard(Modifier.fillMaxWidth(), onClick = { pdf.launch(arrayOf("application/pdf")) }) {
@@ -45,7 +58,7 @@ fun MouUploadScreen(vm: MouViewModel, onBack: () -> Unit, onResult: () -> Unit) 
         if (st.title.isNotBlank() && st.text.isNotBlank()) Text("Dokumen: ${st.title} (${st.source})", fontWeight = FontWeight.Medium, fontSize = 14.sp)
 
         SectionTitle("Fokus analisis (opsional)")
-        listOf("Hak cipta / HKI", "Pembayaran", "Pengakhiran", "Sengketa").chunked(2).forEach { row ->
+        listOf("Hak cipta / HKI", "Pembayaran", "Pengakhiran", "Sengketa", "Kerahasiaan", "Denda").chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth()) {
                 row.forEach { f ->
                     Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -67,7 +80,17 @@ fun MouUploadScreen(vm: MouViewModel, onBack: () -> Unit, onResult: () -> Unit) 
     if (showSource) AlertDialog(
         onDismissRequest = { showSource = false }, title = { Text("Ambil foto dokumen") },
         text = { Text("Pilih sumber gambar. Teks dibaca di perangkat dengan OCR.") },
-        confirmButton = { TextButton(onClick = { showSource = false; camera.launch(null) }) { Text("Kamera") } },
+        confirmButton = {
+            TextButton(onClick = {
+                showSource = false
+                val dir = File(ctx.cacheDir, "camera").apply { mkdirs() }
+                val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(dir, "mou_${System.currentTimeMillis()}.jpg"))
+                photoUri = uri.toString()
+                runCatching { camera.launch(uri) }.onFailure {
+                    Toast.makeText(ctx, "Aplikasi kamera tidak ditemukan.", Toast.LENGTH_SHORT).show()
+                }
+            }) { Text("Kamera") }
+        },
         dismissButton = { TextButton(onClick = { showSource = false; gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("Galeri") } }
     )
     if (showPaste) AlertDialog(
@@ -108,6 +131,20 @@ fun MouResultScreen(vm: MouViewModel, onBack: () -> Unit, onSaveDeadline: () -> 
             Spacer(Modifier.height(4.dp))
             Text(r.summary, fontSize = 13.sp)
         }
+        val checks = MouEngine.checklist(r.risks)
+        NaviCard(Modifier.fillMaxWidth()) {
+            Text("Checklist Klausul Kunci (${checks.count { it.found }}/${checks.size})", fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(6.dp))
+            checks.forEach { c ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (c.found) "✓" else "✗", Modifier.width(22.dp), color = if (c.found) GreenFg else RedFg, fontWeight = FontWeight.Bold)
+                    Text(c.label, Modifier.weight(1f), fontSize = 13.sp)
+                    Hint(if (c.found) "Ada" else "Tidak ditemukan", if (c.found) GreenFg else RedFg)
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Hint("Skor: AMAN ≥ 80 · WASPADA 50–79 · BERISIKO TINGGI < 50")
+        }
         SectionTitle("Klausul Berisiko (${r.risks.size})")
         r.risks.forEach {
             NaviCard(Modifier.fillMaxWidth()) {
@@ -126,7 +163,6 @@ fun MouResultScreen(vm: MouViewModel, onBack: () -> Unit, onSaveDeadline: () -> 
         Hint("Hasil AI bukan nasihat hukum. Konsultasikan dengan ahli hukum untuk keputusan penting.")
     }
 }
-
 @Composable
 fun LawSearchScreen(vm: LawViewModel, onBack: () -> Unit, onOpen: () -> Unit) {
     val st by vm.state.collectAsStateWithLifecycle()

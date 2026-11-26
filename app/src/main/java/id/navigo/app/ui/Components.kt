@@ -100,7 +100,7 @@ fun Pill(text: String, bg: Color, fg: Color) {
 }
 
 fun levelColors(l: String): Pair<Color, Color> = when (l.lowercase()) {
-    "tinggi", "berisiko", "kedaluwarsa", "diblokir" -> RedBg to RedFg
+    "tinggi", "berisiko", "berisiko tinggi", "kedaluwarsa", "diblokir" -> RedBg to RedFg
     "sedang", "waspada", "draf" -> AmberBg to AmberFg
     "aman", "rendah", "aktif", "berlaku" -> GreenBg to GreenFg
     else -> PrimaryLight to Primary
