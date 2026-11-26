@@ -36,8 +36,10 @@ object Extractor {
 
     private val recognizer by lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 
-    suspend fun fromImage(ctx: Context, uri: Uri): String =
-        recognizer.process(InputImage.fromFilePath(ctx, uri)).await().text
+    suspend fun fromImage(ctx: Context, uri: Uri): String {
+        val image = withContext(Dispatchers.IO) { InputImage.fromFilePath(ctx, uri) }
+        return recognizer.process(image).await().text
+    }
 
     suspend fun fromBitmap(bmp: Bitmap): String =
         recognizer.process(InputImage.fromBitmap(bmp, 0)).await().text
